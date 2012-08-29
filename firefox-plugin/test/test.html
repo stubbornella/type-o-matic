@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+<title>Test Page for Firefox CSS Plugin</title>
+<style type="text/css">
+body {
+    /*font-size:17px;*/
+}
+h1 {
+    font-style:italic;
+}
+
+h2 {
+    font-variant:small-caps;
+}
+
+.css-hd1 {
+    font-size:20px;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
+<h1>First-level Heading</h1>
+<h2>Second-level Heading</h2>
+<p class="css-hd1">A CSS-only heading</p>
+<p>Not a heading</p>
+<script>
+//
+var h1 = document.getElementsByTagName("h1")[0],
+    h2 = document.getElementsByTagName("h2")[0],
+    p1 = document.getElementsByTagName("p")[0],
+    p2 = document.getElementsByTagName("p")[1],
+    h1Style = document.defaultView.getComputedStyle(h1, null),
+    h2Style = document.defaultView.getComputedStyle(h2, null);
+
+//console.log("hasOwnFontSize h1: " + hasOwnFontSize(h1));
+//console.log("hasOwnFontSize h2: " + hasOwnFontSize(h2));
+//console.log("hasOwnFontSize p1: " + hasOwnFontSize(p1));
+//console.log("hasOwnFontSize p2: " + hasOwnFontSize(p2));
+
+//console.log("fontSize");
+//console.dir(h1Style.getPropertyValue("fontSize"));
+//console.log("inherited.fontSize");
+//console.dir(h1Style.getPropertyValue("inherited.fontSize"));
+//console.log("font-size");
+//console.dir(h1Style.getPropertyCSSValue("font-size"));
+//console.dir(h1Style);
+
+//console.log("fontSize");
+//console.dir(h2Style.getPropertyValue("fontSize"));
+//console.log("inherited.fontSize");
+//console.dir(h2Style.getPropertyValue("inherited.fontSize"));
+//console.log("font-size");
+//console.dir(h2Style.getPropertyCSSValue("font-size"));
+//console.dir(h2Style);
+
+function hasOwnFontSize(node) {
+    //inject a sibling and check its font-size to determine if element has
+    //font-size explicitly set on it.
+    var testElt = document.createElement("_CSSLINT_"),
+        testStyle,
+        nodeStyle;
+    testElt.style.display = "none";
+    node.parentNode.insertBefore(testElt, node);
+
+    testStyle = document.defaultView.getComputedStyle(testElt, null);
+    nodeStyle = document.defaultView.getComputedStyle(node, null);
+
+    //console.log(testStyle.getPropertyCSSValue("font-size").cssText);
+    //console.log(nodeStyle.getPropertyCSSValue("font-size").cssText);
+    return testStyle.getPropertyCSSValue("font-size").cssText !=
+        nodeStyle.getPropertyCSSValue("font-size").cssText;
+}
+
+</script>
+</body>
+</html>
+

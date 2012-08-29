@@ -1,0 +1,21 @@
+/* Report contents */
+.csslint-report table {
+  border-spacing:0;
+}
+.csslint-report table th {
+  color:#666;
+  padding:0.5em;
+}
+.csslint-report table td {
+  padding:0.3em;
+  text-align:center;
+}
+.csslint-report table td:last-child {
+  text-align:left;
+  white-space:nowrap;
+}
+
+/* Report grid */
+.csslint-report table tr > * {
+  border-bottom:1px solid #ccc;
+}

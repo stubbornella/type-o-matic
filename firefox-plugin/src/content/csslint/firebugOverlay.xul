@@ -1,0 +1,17 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://csslint/content/firebugPanel.css"?>
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+  <script type="application/x-javascript" src="chrome://csslint/content/firebugPanel.js"/> 
+          
+  <commandset id="mainCommandSet"> 
+    <command id="cmd_headings" oncommand="FirebugContext.getPanel('csslint').cmdHeadings()"/>
+  </commandset>
+  
+  <toolbar id="fbToolbar" align="center"> 
+    <hbox id="fbToolbarInner" insertbefore="fbDetachButton" flex="1" align="center"> 
+      <hbox id="fbCssLintButtons" insertafter="fbNetButtons" collapsed="true">
+        <toolbarbutton label="Headings" class="toolbar-text-button" tooltiptext="Headings" command="cmd_headings"/> 
+      </hbox> 
+    </hbox> 
+  </toolbar> 
+</overlay>
