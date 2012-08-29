@@ -26,19 +26,7 @@ var EXAMPLE_TEXT_MAXCHARS = 256,
         "text-decoration",
         "letter-spacing",
         "word-spacing"
-    ],
-
-    propertyHeaderMap = {
-        "font-family": "family",
-        "font-size": "size",
-        "font-weight": "weight",
-        "font-variant": "variant",
-        "font-style": "style",
-        "text-transform": "transform",
-        "text-decoration": "decoration",
-        "letter-spacing": "letter-space",
-        "word-spacing": "word-space"
-    };
+    ];
 
 
 //--- Utility functions
@@ -325,15 +313,7 @@ CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
              *      displayed.
              */
             getColumns: function(properties) {
-                var names = ["count"],
-                    prop,
-                    i;
-                for (i = 0; i < properties.length; i++) {
-                    prop = properties[i];
-                    names.push(propertyHeaderMap[prop] || prop);
-                }
-                names.push("sample-text");
-                return names;
+                return ["count"].concat(properties).concat(["sample-text"]);
             },
 
             //get the string for a style object
