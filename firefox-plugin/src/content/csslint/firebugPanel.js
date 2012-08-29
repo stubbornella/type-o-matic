@@ -59,7 +59,7 @@ function truncateString(s, n) {
 /**
  * Returns a canonical representation of a style object.
  * @param {Object} style
- * @return {String} 
+ * @return {String}
  */
 function styleToCanonicalString(style) {
     var result = [],
@@ -89,7 +89,7 @@ function isHeading(node) {
         nodeStyle,
         triggerProp,
         i;
-    
+
     if (tagName.match(RE_HEADER)) {
         result = true;
     } else if (tagName.match(RE_SKIP)) {
@@ -97,7 +97,7 @@ function isHeading(node) {
     } else if (firstChild &&
             firstChild.nodeType == NODETYPE_TEXT &&
             firstChild.nodeValue &&
-            firstChild.nodeValue.trim() != "")
+            firstChild.nodeValue.trim() !== "")
     {
         // Skip nodes that don't immediately contain text to avoid picking up
         // the parent node and the child node as separate headings.
@@ -171,7 +171,7 @@ function collectHeadings(doc) {
 /**
  * Collect unique headings within a document.
  * @param {Document} doc
- * @return {Array} 
+ * @return {Array}
  */
 function uniqueHeadings(doc) {
     var headings = collectHeadings(doc),
@@ -235,7 +235,7 @@ function headingComparer(a, b) {
 
 //--- Firebug hooks
 
-Firebug.CssLintModule = FBL.extend(Firebug.Module, { 
+Firebug.CssLintModule = FBL.extend(Firebug.Module, {
     addStyleSheet: function(doc) {
         // Make sure the stylesheet isn't appended twice.
         if (FBL.$("csslintStyles", doc)) {
@@ -253,13 +253,13 @@ Firebug.CssLintModule = FBL.extend(Firebug.Module, {
         var panel = context.getPanel(FBL.panelName);
         this.addStyleSheet(panel.document);
     }
-}); 
+});
 
-function CssLintPanel() { } 
-CssLintPanel.prototype = FBL.extend(Firebug.Panel, { 
-    name: "csslint", 
-    title: "CSS Lint", 
-    searchable: false, 
+function CssLintPanel() { }
+CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
+    name: "csslint",
+    title: "CSS Lint",
+    searchable: false,
     editable: false,
 
     //--- Overridden panel functions
@@ -268,7 +268,7 @@ CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
         Firebug.Panel.initialize.apply(this, arguments);
         Firebug.CssLintModule.addStyleSheet(this.document);
     },
-    
+
     show: function(state) {
         this.showToolbarButtons(BUTTONS_ID, true);
     },
@@ -284,7 +284,7 @@ CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
             doc = win.document,
             headings = uniqueHeadings(doc),
             template;
-        
+
         template = domplate({
             index_: "",
 
@@ -305,7 +305,7 @@ CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
                                         "$prop|setIndex" +
                                         "$hd.style|getByIndex")),
                                 FBL.TD(
-                                    FBL.DIV({ style:"$hd.style|toStyleString" },
+                                    FBL.SPAN({ style:"$hd.style|toStyleString" },
                                         "$hd.text")))))),
 
             //store a value for later use as an index
@@ -332,7 +332,7 @@ CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
                     prop = properties[i];
                     names.push(propertyHeaderMap[prop] || prop);
                 }
-                names.push("Sample Text");
+                names.push("sample-text");
                 return names;
             },
 
@@ -354,10 +354,10 @@ CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
                 properties: collectProperties
             }, this.panelNode, template);
     }
-}); 
+});
 
-Firebug.registerModule(Firebug.CssLintModule); 
-Firebug.registerPanel(CssLintPanel); 
+Firebug.registerModule(Firebug.CssLintModule);
+Firebug.registerPanel(CssLintPanel);
 
 });
 
