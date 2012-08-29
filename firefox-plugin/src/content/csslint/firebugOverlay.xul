@@ -4,7 +4,7 @@
   <script type="application/x-javascript" src="chrome://csslint/content/firebugPanel.js"/> 
           
   <commandset id="mainCommandSet"> 
-    <command id="cmd_headings" oncommand="FirebugContext.getPanel('csslint').cmdHeadings()"/>
+    <command id="cmd_headings" oncommand="(window.FirebugContext || window.Firebug.currentContext).getPanel('csslint').cmdHeadings()"/>
   </commandset>
   
   <toolbar id="fbToolbar" align="center"> 
