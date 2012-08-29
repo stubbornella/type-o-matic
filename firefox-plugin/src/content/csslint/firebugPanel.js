@@ -24,6 +24,7 @@ var EXAMPLE_TEXT_MAXCHARS = 256,
         "color",
         "text-transform",
         "text-decoration",
+        "text-shadow",
         "letter-spacing",
         "word-spacing"
     ];
