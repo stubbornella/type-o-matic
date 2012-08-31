@@ -1,6 +1,5 @@
-VERSION=0.0.1
-XPI=csslint-${VERSION}.xpi
+VERSION=0.1.0
+XPI=typography-${VERSION}.xpi
 
 all:
 	cd src && zip -r ${XPI} * && mv ${XPI} ..
-

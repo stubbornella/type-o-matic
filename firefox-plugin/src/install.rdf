@@ -3,22 +3,25 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>csslint@csslint</em:id>
-    <em:version>0.0.2</em:version>
+    <em:id>typography@stubbornella.org</em:id>
+    <em:version>0.1.0</em:version>
     <em:type>2</em:type>
-   
+
     <!-- Firefox -->
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>3</em:minVersion>
+        <em:minVersion>10</em:minVersion>
         <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
-    <em:name>CSS Lint</em:name>
-    <em:description>The lintin'est gun in the West.</em:description>
-    <em:creator>-</em:creator>
-    <em:homepageURL>http://csslint</em:homepageURL>
-  </Description>      
+    <em:name>Typography</em:name>
+    <em:description>Typography auditor for Firebug</em:description>
+    <em:creator>Nicole Sullivan</em:creator>
+    <em:contributor>Chris Klaiber</em:contributor>
+    <em:contributor>Brett Stimmerman</em:contributor>
+
+    <em:homepageURL>http://stubbornella.org</em:homepageURL>
+  </Description>
 </RDF>

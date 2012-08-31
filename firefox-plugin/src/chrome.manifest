@@ -1,4 +1,4 @@
-content csslint content/csslint/ xpcnativewrappers=no
+content csslint content/csslint/
 skin    csslint classic/1.0 content/skin/classic/
 
-overlay chrome://firebug/content/firebugOverlay.xul         chrome://csslint/content/firebugOverlay.xul
+overlay chrome://firebug/content/firebugOverlay.xul chrome://csslint/content/firebugOverlay.xul

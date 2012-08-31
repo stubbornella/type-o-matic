@@ -1,21 +1,41 @@
-/* Report contents */
-.csslint-report table {
+.typography-report table {
   border-spacing:0;
-}
-.csslint-report table th {
-  color:#666;
-  padding:0.5em;
-}
-.csslint-report table td {
-  padding:0.3em;
-  text-align:center;
-}
-.csslint-report table td:last-child {
-  text-align:left;
-  white-space:nowrap;
+  width: 100%;
 }
 
-/* Report grid */
-.csslint-report table tr > * {
+.typography-report th {
+  background: #eee;
+  border:1px solid #ccc;
+  border-width: 0 0 1px 1px;
+  color:#555;
+  padding:0.3em 0.6em;
+  text-align: left;
+}
+.typography-report th:first-child {
+  border-left: 0;
+}
+.typography-report th:last-child {
+  white-space: nowrap;
+}
+
+.typography-report td {
   border-bottom:1px solid #ccc;
+  padding:0.3em 0.6em;
+  white-space: nowrap;
+}
+
+.notify {
+  background: #cfc;
+  /*border-bottom: 1px solid #999;*/
+  box-shadow: 0 1px 5px #000;
+  font-weight: bold;
+  padding: 0.3em 1.2em;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+.error {
+  background: #fcc;
 }

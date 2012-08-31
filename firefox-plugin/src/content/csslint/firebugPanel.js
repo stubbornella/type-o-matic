@@ -1,48 +1,91 @@
 /*global FBL, Firebug, NodeFilter, domplate*/
 FBL.ns(function() {
 
-//TODO: bug in the sibling node style checking ... it's not added to the DOM
-//and thus computed style values are bogus
+var EXAMPLE_TEXT_MAXCHARS = 40,
+    NODETYPE_TEXT  = 3,
+    BOLD_WEIGHT    = 700,
 
-var EXAMPLE_TEXT_MAXCHARS = 256,
-    NODETYPE_TEXT = 3,
-    CSSLINT_PROP_TEST_TAG = "_CSSLINT_",
-    BOLD_WEIGHT = 700,
-    BUTTONS_ID = "fbCssLintButtons",
-    RE_HEADER = /^(?:h[1-6]|header)$/,
-    RE_SKIP = /^(?:script|style)$/,
+    BUTTONS_ID     = 'fbTypographyButtons',
+    COPY_BUTTON_ID = 'fbTypographyCopyButton',
+    GENERATE_BUTTON_ID = 'fbTypographyGenerateButton',
+    STYLE_ID       = 'typographyStyles',
 
-    triggerProperties = [
-        "font-size"
-    ],
+    CONTAINER_CLASS = 'typography-report',
+
+    RE_SKIP        = /^(?:(no)?script|style)$/,
+    PANEL_NAME     = 'Typography',
+
     collectProperties = [
-        "font-family",
-        "font-size",
-        "font-weight",
-        "font-variant",
-        "font-style",
-        "color",
-        "text-transform",
-        "text-decoration",
-        "text-shadow",
-        "letter-spacing",
-        "word-spacing"
+        'font-family',
+        'font-size',
+        'font-weight',
+        'font-variant',
+        'font-style',
+        'color',
+        'text-transform',
+        'text-decoration',
+        'text-shadow',
+        'letter-spacing',
+        'word-spacing'
     ];
-
 
 //--- Utility functions
 
 /**
- * Truncate string to the given number of characters and append an ellipsis.
+ * Truncate string to the given number of characters, append an ellipsis, and
+ * trim trailing and leading whitespace.
  * @param {String} s
  * @param {Integer} n
  * @return {String}
  */
 function truncateString(s, n) {
     if (s.length > n) {
-        s = s.substr(0, n) + "...";
+        s = s.substr(0, n) + '...';
     }
-    return s;
+
+    return s.replace(/^\s+|\s+$/g, '');
+}
+
+/**
+ * Convert RGB to HSL.
+ * @param {Array} c RGB values
+ * @return {Array} HSL values
+ */
+function rgb2hsl(c) {
+    if (!c) {
+        c = [255,255,255];
+    }
+
+    var r = c[0]/255,
+        g = c[1]/255,
+        b = c[2]/255,
+
+        max = Math.max(r, g, b),
+        min = Math.min(r, g, b),
+
+        h, s, l = (max + min) / 2;
+
+    if (max === min) {
+        h = s = 0; // achromatic
+    } else {
+        var d = max - min;
+
+        s = (l > 0.5) ? d / (2 - max - min) : d / (max + min);
+
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+
+        h /= 6;
+    }
+
+    return [
+        parseInt(h * 360, 10),
+        parseInt(s * 100, 10),
+        parseInt(l * 100, 10)
+    ];
 }
 
 /**
@@ -52,77 +95,51 @@ function truncateString(s, n) {
  */
 function styleToCanonicalString(style) {
     var result = [],
-        keys = FBL.keys(style),
+        keys = FBL.keys(style).sort(),
         key,
         i;
-    keys.sort();
+
     for (i = 0; i < keys.length; i++) {
         key = keys[i];
-        result.push(key + ":" + style[key]);
+        result.push(key + ':' + style[key]);
     }
-    return result.join(";");
+
+    return result.join(';');
 }
 
 /**
- * Is the given node considered a heading?
+ * Is the given node considered interesting?
  * @param {HTMLElement} node
  * @return {Boolean}
  */
-function isHeading(node) {
-    var result = false,
+function isInteresting(node) {
+    var result     = false,
         firstChild = node.firstChild,
-        tagName = node.tagName.toLowerCase(),
-        doc = node.ownerDocument,
-        testElt,
-        testStyle,
-        nodeStyle,
-        triggerProp,
-        i;
+        tagName    = node.tagName.toLowerCase();
 
-    if (tagName.match(RE_HEADER)) {
-        result = true;
-    } else if (tagName.match(RE_SKIP)) {
-        result = false;
-    } else if (firstChild &&
+    if (!tagName.match(RE_SKIP) &&
+            firstChild &&
             firstChild.nodeType == NODETYPE_TEXT &&
             firstChild.nodeValue &&
-            firstChild.nodeValue.trim() !== "")
-    {
+            firstChild.nodeValue.trim() !== '') {
+
         // Skip nodes that don't immediately contain text to avoid picking up
         // the parent node and the child node as separate headings.
 
-        // Without an API to determine whether a computed style value is
-        // inherited or explicitly set, inject a sibling and compare with its
-        // property values. A mismatch indicated custom styling. This works
-        // alright with font-size, but might not work with other properties.
-
-        testElt = doc.getElementById(CSSLINT_PROP_TEST_TAG) ||
-            doc.createElement(CSSLINT_PROP_TEST_TAG);
-        testElt.style.display = "none";
-
-        testStyle = doc.defaultView.getComputedStyle(testElt, null);
-        nodeStyle = doc.defaultView.getComputedStyle(node, null);
-
         result = true;
-        for (i = 0; result && i < triggerProperties.length; i++) {
-            triggerProp = triggerProperties[i];
-            result = testStyle.getPropertyCSSValue(triggerProp).cssText !=
-                nodeStyle.getPropertyCSSValue(triggerProp).cssText;
-        }
-
     }
+
     return result;
 }
 
 /**
- * Collect headings within a document.
+ * Collect interesting nodes within a document.
  * @param {Document} doc
  * @return {Array}
  */
-function collectHeadings(doc) {
+function collectNodes(doc, nodes) {
     var treeWalker = doc.createTreeWalker(doc.documentElement,
             NodeFilter.SHOW_ELEMENT, null, false),
-        headings = [],
         style,
         node,
         nodeComputedStyle,
@@ -132,175 +149,339 @@ function collectHeadings(doc) {
 
     while (treeWalker.nextNode()) {
         node = treeWalker.currentNode;
-        if (!node.textContent || !isHeading(node)) {
+
+        if (!node.textContent || !isInteresting(node)) {
             continue;
         }
 
         style = {};
         nodeComputedStyle = doc.defaultView.getComputedStyle(node, null);
+
         for (i = 0; i < collectProperties.length; i++) {
-            prop = collectProperties[i];
+            prop    = collectProperties[i];
             propVal = nodeComputedStyle.getPropertyCSSValue(prop);
+
             if (propVal) {
                 style[prop] = propVal.cssText;
             }
         }
 
-        //assume that we always collect at least one property
-        headings.push({
-            tag: node.tagName,
-            text: truncateString(node.textContent, EXAMPLE_TEXT_MAXCHARS),
+        nodes.push({
+            tag  : node.tagName,
+            text : truncateString(node.textContent, EXAMPLE_TEXT_MAXCHARS),
             style: style
         });
     }
 
-    return headings;
+    return nodes;
 }
 
 /**
- * Collect unique headings within a document.
+ * Collect unique nodes within a document.
  * @param {Document} doc
  * @return {Array}
  */
-function uniqueHeadings(doc) {
-    var headings = collectHeadings(doc),
-        heading,
-        unique = {},
+function uniqueNodes(doc, nodes) {
+    var unique = {},
+        node,
         key,
         i;
 
-    for (i = 0; i < headings.length; i++) {
-        heading = headings[i];
-        key = styleToCanonicalString(heading.style);
+    nodes = collectNodes(doc, nodes);
+
+    for (i = 0; i < nodes.length; i++) {
+        node = nodes[i];
+        key  = styleToCanonicalString(node.style);
+
+        node.styleText = key;
+
         if (!unique[key]) {
-            unique[key] = heading;
-            heading.count = 1;
+            unique[key] = node;
+            node.count  = node.count || 1;
         } else {
             unique[key].count++;
         }
     }
+
     return FBL.values(unique);
 }
 
 /**
- * Create a child element of the parent.
- * @param {HTMLElement} parent
- * @param {String} nodeType
- * @return {HTMLElement} The created element
+ * Sorts the given nodes by color.
+ * @param {Array} nodes
+ * @return {Array}
  */
-function createDummyNode(parent, nodeType) {
-    var doc = parent.ownerDocument,
-        elt = doc.createElement(nodeType);
+function sortNodes(nodes) {
+    var color  = [],
+        gray   = [],
+        white  = [],
+        black  = [];
 
-    parent.appendChild(elt);
-    return elt;
+    nodes.forEach(function (node) {
+        var rgb = node.style.color.match(/\d+/g),
+            hsl = node._HSL = rgb2hsl(rgb);
+
+        if (hsl[0] || hsl[1]) {
+            if (hsl[2] > 92) { // Very very light colors are grouped with grays.
+                gray.push(node);
+            } else {
+                color.push(node);
+            }
+        } else {
+            switch (hsl[2]) {
+            case 100: white.push(node); break;
+            case 0  : black.push(node); break;
+            default : gray.push(node);  break;
+            }
+        }
+    });
+
+    color.sort(colorSorter);
+    gray.sort(baseSorter);
+    white.sort(baseSorter);
+    black.sort(baseSorter);
+
+    return white.concat(gray, black, color);
 }
 
 /**
- * A sort function for headings to display in the UI
- * @param {Object} a A heading object
- * @param {Object} b A heading object
+ * Comparison function for sorting grayscale colors.
+ * @param {Object} a A node object
+ * @param {Object} b A node object
  * @return {Number} -1, 0, 1 for a < b, a == b, a > b
  */
-function headingComparer(a, b) {
-    var aStyle = a.style,
-        bStyle = b.style,
-        aFontSize = parseInt(aStyle["font-size"], 10),
-        bFontSize = parseInt(bStyle["font-size"], 10),
-        aFontWeight = aStyle["font-weight"],
-        bFontWeight = bStyle["font-weight"],
-        result;
-
-    aFontWeight = (aFontWeight == "bold") ? BOLD_WEIGHT : parseInt(aFontWeight, 10);
-    bFontWeight = (bFontWeight == "bold") ? BOLD_WEIGHT : parseInt(bFontWeight, 10);
-
-    // Determine sort order
-
-    result = bFontSize - aFontSize ||   // font-size descending
-        bFontWeight - aFontWeight;      // font-weight descending
-    return result;
+function graySorter(a, b) {
+    return baseSorter(a, b, b._HSL[2] - a._HSL[2]);
 }
 
+/**
+ * Comparison function for sorting colors.
+ * @param {Object} a A node object
+ * @param {Object} b A node object
+ * @return {Number} -1, 0, 1 for a < b, a == b, a > b
+ */
+function colorSorter(a, b) {
+    var h = b._HSL[0] - a._HSL[0];
+
+    return baseSorter(a, b, Math.abs(h) > 35 ? h : false);
+}
+
+/**
+ * Base comparison function for sorting colors.
+ * @param {Number} sort An existing sort condition
+ * @param {Object} a A node object
+ * @param {Object} b A node object
+ * @return {Number} -1, 0, 1 for a < b, a == b, a > b
+ */
+function baseSorter(a, b, sort) {
+    var aFontSize = parseInt(a.style['font-size'], 10),
+        bFontSize = parseInt(b.style['font-size'], 10),
+        aFontWeight = a.style['font-weight'],
+        bFontWeight = b.style['font-weight'];
+
+    aFontWeight = (aFontWeight === 'bold') ? BOLD_WEIGHT : parseInt(aFontWeight, 10);
+    bFontWeight = (bFontWeight === 'bold') ? BOLD_WEIGHT : parseInt(bFontWeight, 10);
+
+    return sort ? sort : (bFontSize - aFontSize || bFontWeight - aFontWeight);
+}
 
 //--- Firebug hooks
 
-Firebug.CssLintModule = FBL.extend(Firebug.Module, {
+Firebug.TypographyModule = FBL.extend(Firebug.Module, {
     addStyleSheet: function(doc) {
         // Make sure the stylesheet isn't appended twice.
-        if (FBL.$("csslintStyles", doc)) {
+        if (FBL.$(STYLE_ID, doc)) {
             return;
         }
 
         var styleSheet = FBL.createStyleSheet(doc,
-            "chrome://csslint/skin/csslint.css");
-        styleSheet.setAttribute("id", "csslintStyles");
+            'chrome://csslint/skin/csslint.css');
+        styleSheet.setAttribute('id', STYLE_ID);
         FBL.addStyleSheet(doc, styleSheet);
     },
 
     reattachContext: function(browser, context) {
-        //TODO: panelName not declared, guessing FBL. prefix, code copied from http://www.softwareishard.com/blog/firebug-tutorial/extending-firebug-yahoo-search-part-vi/#more-15
-        var panel = context.getPanel(FBL.panelName);
+        var panel = context.getPanel(PANEL_NAME);
         this.addStyleSheet(panel.document);
+    },
+
+    togglePersist: function(context) {
+        var panel = context.getPanel(PANEL_NAME);
+        panel.persistContent = panel.persistContent ? false : true;
+
+        Firebug.chrome.setGlobalAttribute('cmd_togglePersistTypography',
+            'checked', panel.persistContent);
     }
 });
 
-function CssLintPanel() { }
-CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
-    name: "csslint",
-    title: "CSS Lint",
+function TypographyPanel() { }
+TypographyPanel.prototype = FBL.extend(Firebug.Panel, {
+    name      : PANEL_NAME,
+    title     : PANEL_NAME,
     searchable: false,
-    editable: false,
+    editable  : false,
 
     //--- Overridden panel functions
 
     initialize: function() {
         Firebug.Panel.initialize.apply(this, arguments);
-        Firebug.CssLintModule.addStyleSheet(this.document);
+        Firebug.TypographyModule.addStyleSheet(this.document);
     },
 
-    show: function(state) {
+    show: function (state) {
         this.showToolbarButtons(BUTTONS_ID, true);
+        Firebug.chrome.setGlobalAttribute('cmd_togglePersistTypography',
+            'checked', this.persistContent);
+
+        if (state && state.panelNode) {
+            this._nodes    = state.panelNode._NODES || [];
+            this._urlCache = state.panelNode._URL_CACHE || {};
+        } else {
+            this._nodes    = [];
+            this._urlCache = {};
+        }
+
+        this.showButton(COPY_BUTTON_ID, this._nodes.length);
     },
 
     hide: function() {
         this.showToolbarButtons(BUTTONS_ID, false);
     },
 
+    showButton: function (buttonId, show) {
+        FBL.$(buttonId).style.display = show ? 'block' : 'none';
+    },
+
+    setClipboardContents: function (copytext) {
+        if (!copytext || !copytext.length) {
+            return false;
+        }
+
+        try {
+            var str = Components.classes['@mozilla.org/supports-string;1']
+                .createInstance(Components.interfaces.nsISupportsString);
+            if (!str) { return false; }
+            str.data = copytext;
+
+            var trans = Components.classes['@mozilla.org/widget/transferable;1']
+                  .createInstance(Components.interfaces.nsITransferable);
+            if (!trans) { return false; }
+
+
+            trans.addDataFlavor('text/unicode');
+            trans.setTransferData('text/unicode', str, copytext.length * 2);
+
+            var clipid = Components.interfaces.nsIClipboard;
+            var clip = Components.classes['@mozilla.org/widget/clipboard;1']
+                .getService(clipid);
+            if (!clip) { return false; }
+
+            clip.setData(trans,null,clipid.kGlobalClipboard);
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
+    },
+
+    buildJSON: function (nodes, properties) {
+        // O.G. Style
+        nodes = nodes.map(function (node) {
+            node.style.count          = node.count;
+            node.style['sample-text'] = node.text;
+
+            return node.style;
+        });
+
+        // New Style
+        // nodes = nodes.map(function (node) {
+        //     delete node._HSL;
+        //     return node;
+        // });
+
+        return JSON.stringify(nodes, null, 2);
+    },
+
+    notify: function (type, msg) {
+        var div = this.panelNode.ownerDocument.createElement('div');
+        div.className = 'notify ' + type;
+        div.innerHTML = msg;
+
+        this.panelNode.appendChild(div);
+
+        setTimeout(function () {
+            if (div.parentNode) {
+                div.parentNode.removeChild(div);
+            }
+        }, 2500);
+    },
+
     //--- Command entry points
 
-    cmdHeadings: function() {
+    cmdClear: function () {
+        this.panelNode.innerHTML  = '';
+        this.panelNode._NODES     = null;
+        this.panelNode._URL_CACHE = null;
+
+        this._nodes    = [];
+        this._urlCache = {};
+
+        this.showButton(COPY_BUTTON_ID, false);
+    },
+
+    cmdExport: function () {
+        if (!this._nodes.length) {
+            this.notify('error', 'Nothing to copy.');
+            return;
+        }
+
+        var json = this.buildJSON(this._nodes, collectProperties);
+        this.setClipboardContents(json);
+        this.notify('info', 'The report was copied to the clipboard as JSON.');
+    },
+
+    cmdReport: function() {
         var win = this.context.window,
             doc = win.document,
-            headings = uniqueHeadings(doc),
+            nodes,
             template;
 
+        if (this._urlCache[win.location]) {
+            this.notify('error', 'Report already generated for: ' + win.location);
+            return;
+        } else {
+            this.panelNode.innerHTML = '';
+            this._urlCache[win.location] = true;
+            nodes = uniqueNodes(doc, this._nodes);
+        }
+
         template = domplate({
-            index_: "",
+            index_: '',
 
             tag:
-                FBL.DIV({ "class":"csslint-report" },
+                FBL.DIV({ 'class': CONTAINER_CLASS },
                     FBL.TABLE(
                         //table headings
                         FBL.TR(
-                            FBL.FOR("name", "$properties|getColumns",
-                                FBL.TH("$name"))),
+                            FBL.FOR('name', '$properties|getColumns',
+                                FBL.TH('$name'))),
                         //loop over and write heading values
-                        FBL.FOR("hd", "$headings",
+                        FBL.FOR('node', '$nodes',
                             FBL.TR(
-                                FBL.TD("$hd.count"),
-                                FBL.FOR("prop", "$properties",
+                                FBL.TD('$node.count'),
+                                FBL.FOR('prop', '$properties',
                                     FBL.TD(
                                         //hack to write $hd.style[$prop]
-                                        "$prop|setIndex" +
-                                        "$hd.style|getByIndex")),
+                                        '$prop|setIndex' +
+                                        '$node.style|getByIndex')),
                                 FBL.TD(
-                                    FBL.SPAN({ style:"$hd.style|toStyleString" },
-                                        "$hd.text")))))),
+                                    FBL.SPAN({ style:'$node.styleText' },
+                                        '$node.text')))))),
 
             //store a value for later use as an index
             setIndex: function(val) {
                 this.index_ = val;
-                return "";
+                return '';
             },
 
             //look up a value in an object using the index stored by setIndex()
@@ -314,31 +495,30 @@ CssLintPanel.prototype = FBL.extend(Firebug.Panel, {
              *      displayed.
              */
             getColumns: function(properties) {
-                return ["count"].concat(properties).concat(["sample-text"]);
-            },
-
-            //get the string for a style object
-            toStyleString: function(style) {
-                var i, s = [];
-                for (i in style) {
-                    if (style.hasOwnProperty(i)) {
-                        s.push(i + ":" + style[i] + ";");
-                    }
-                }
-                return s.join("");
+                return ['count'].concat(properties, 'sample-text')
+                    .map(function (name) {
+                        return name.replace('-', '-\n');
+                    });
             }
         });
 
-        headings.sort(headingComparer);
+        nodes = sortNodes(nodes);
+
         template.tag.append({
-                headings: headings,
+                nodes: nodes,
                 properties: collectProperties
             }, this.panelNode, template);
+
+        this.showButton(COPY_BUTTON_ID, true);
+
+        this.panelNode._NODES     = this._nodes = nodes;
+        this.panelNode._URL_CACHE = this._urlCache;
+
+        this.notify('info', 'Report generated for: ' + win.location);
     }
 });
 
-Firebug.registerModule(Firebug.CssLintModule);
-Firebug.registerPanel(CssLintPanel);
+Firebug.registerModule(Firebug.TypographyModule);
+Firebug.registerPanel(TypographyPanel);
 
 });
-
