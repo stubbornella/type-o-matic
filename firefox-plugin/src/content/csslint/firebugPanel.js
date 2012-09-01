@@ -5,6 +5,8 @@ var EXAMPLE_TEXT_MAXCHARS = 40,
     NODETYPE_TEXT  = 3,
     BOLD_WEIGHT    = 700,
 
+    NEAR_GRAY_THRESHOLD = 20,
+
     BUTTONS_ID     = 'fbTypographyButtons',
     COPY_BUTTON_ID = 'fbTypographyCopyButton',
     GENERATE_BUTTON_ID = 'fbTypographyGenerateButton',
@@ -219,10 +221,15 @@ function sortNodes(nodes) {
 
     nodes.forEach(function (node) {
         var rgb = node.style.color.match(/\d+/g),
-            hsl = node._HSL = rgb2hsl(rgb);
+            hsl = node._HSL = rgb2hsl(rgb),
+            max, min;
 
         if (hsl[0] || hsl[1]) {
-            if (hsl[2] > 92) { // Very very light colors are grouped with grays.
+            max = Math.max(rgb[0], rgb[1], rgb[2]);
+            min = Math.min(rgb[0], rgb[1], rgb[2]);
+
+            // Near-gray colors are grouped with grays.
+            if (max - min < NEAR_GRAY_THRESHOLD) {
                 gray.push(node);
             } else {
                 color.push(node);
