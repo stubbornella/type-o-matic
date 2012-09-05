@@ -140,7 +140,7 @@ function isInteresting(node) {
  * @return {Array}
  */
 function collectNodes(doc, nodes) {
-    var treeWalker = doc.createTreeWalker(doc.documentElement,
+    var treeWalker = doc.createTreeWalker(doc.body,
             NodeFilter.SHOW_ELEMENT, null, false),
         style,
         node,
