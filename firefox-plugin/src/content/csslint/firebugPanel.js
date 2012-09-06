@@ -17,7 +17,7 @@ var EXAMPLE_TEXT_MAXCHARS = 40,
     RE_SKIP        = /^(?:(no)?script|style)$/,
     PANEL_NAME     = 'Typography',
 
-    collectProperties = [
+    PROPERTIES = [
         'font-family',
         'font-size',
         'font-weight',
@@ -29,7 +29,10 @@ var EXAMPLE_TEXT_MAXCHARS = 40,
         'text-shadow',
         'letter-spacing',
         'word-spacing'
-    ];
+    ],
+
+    Cc = Components.classes,
+    Ci = Components.interfaces;
 
 //--- Utility functions
 
@@ -97,14 +100,11 @@ function rgb2hsl(c) {
  */
 function styleToCanonicalString(style) {
     var result = [],
-        keys = FBL.keys(style).sort(),
-        key,
-        i;
+        keys = FBL.keys(style).sort();
 
-    for (i = 0; i < keys.length; i++) {
-        key = keys[i];
+    keys.forEach(function (key) {
         result.push(key + ':' + style[key]);
-    }
+    });
 
     return result.join(';');
 }
@@ -112,26 +112,25 @@ function styleToCanonicalString(style) {
 /**
  * Is the given node considered interesting?
  * @param {HTMLElement} node
- * @return {Boolean}
+ * @return {Number}
  */
-function isInteresting(node) {
-    var result     = false,
-        firstChild = node.firstChild,
+function nodeFilter(node) {
+    var firstChild = node.firstChild,
         tagName    = node.tagName.toLowerCase();
 
     if (!tagName.match(RE_SKIP) &&
+            node.textContent &&
             firstChild &&
-            firstChild.nodeType == NODETYPE_TEXT &&
+            firstChild.nodeType === NODETYPE_TEXT &&
             firstChild.nodeValue &&
             firstChild.nodeValue.trim() !== '') {
 
-        // Skip nodes that don't immediately contain text to avoid picking up
-        // the parent node and the child node as separate headings.
-
-        result = true;
+        return NodeFilter.FILTER_ACCEPT;
     }
 
-    return result;
+    // Skip nodes that don't immediately contain text to avoid picking up
+    // the parent node and the child node as separate headings.
+    return NodeFilter.FILTER_SKIP;
 }
 
 /**
@@ -140,42 +139,79 @@ function isInteresting(node) {
  * @return {Array}
  */
 function collectNodes(doc, nodes) {
-    var treeWalker = doc.createTreeWalker(doc.body,
-            NodeFilter.SHOW_ELEMENT, null, false),
-        style,
-        node,
-        nodeComputedStyle,
-        prop,
-        propVal,
-        i;
+    var treeWalker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT,
+            {acceptNode: nodeFilter}, false),
+        node;
 
-    while (treeWalker.nextNode()) {
-        node = treeWalker.currentNode;
-
-        if (!node.textContent || !isInteresting(node)) {
-            continue;
-        }
-
-        style = {};
-        nodeComputedStyle = doc.defaultView.getComputedStyle(node, null);
-
-        for (i = 0; i < collectProperties.length; i++) {
-            prop    = collectProperties[i];
-            propVal = nodeComputedStyle.getPropertyCSSValue(prop);
-
-            if (propVal) {
-                style[prop] = propVal.cssText;
-            }
-        }
-
-        nodes.push({
-            tag  : node.tagName,
-            text : truncateString(node.textContent, EXAMPLE_TEXT_MAXCHARS),
-            style: style
-        });
+    while (node = treeWalker.nextNode()) {
+        // if (node.tagName.toLowerCase() === 'a') {
+        //     nodes = nodes.concat(collectLink(node));
+        // } else {
+            nodes.push(collectNode(node));
+        // }
     }
 
     return nodes;
+}
+
+/**
+ * Collect a single node.
+ * @param {HTMLElement} node
+ * @return {Object}
+ */
+function collectNode(node) {
+    return {
+        tag  : node.tagName,
+        text : truncateString(node.textContent, EXAMPLE_TEXT_MAXCHARS),
+        style: getComputedStyle(node)
+    };
+}
+
+/**
+ * Collect a singe link node, and each of its applicable states.
+ * @param {HTMLElement} node
+ * @return {Array}
+ */
+function collectLink(node) {
+    var domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
+            .getService(Ci.inIDOMUtils),
+        nodes = [collectNode(node, nodes)];
+
+    if (node.tagName.toLowerCase() === 'a') {
+        // <none>: 0
+        // active: 1
+        // focus : 2
+        // hover : 4
+        [1,2,4].forEach(function (state) {
+            domUtils.setContentState(node, state);
+            nodes.push(collectNode(node));
+        });
+
+        domUtils.setContentState(node, 0);
+    }
+
+    return nodes;
+}
+
+/**
+ * Returns an object representing a node's computed style.
+ * @param {HTMLElement} node
+ * @return {Object}
+ */
+function getComputedStyle(node) {
+    var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node),
+        style = {},
+        val;
+
+    PROPERTIES.forEach(function (prop) {
+        val = computedStyle.getPropertyCSSValue(prop);
+
+        if (val) {
+            style[prop] = val.cssText;
+        }
+    });
+
+    return style;
 }
 
 /**
@@ -184,26 +220,20 @@ function collectNodes(doc, nodes) {
  * @return {Array}
  */
 function uniqueNodes(doc, nodes) {
-    var unique = {},
-        node,
-        key,
-        i;
+    var unique = {};
 
-    nodes = collectNodes(doc, nodes);
-
-    for (i = 0; i < nodes.length; i++) {
-        node = nodes[i];
-        key  = styleToCanonicalString(node.style);
-
-        node.styleText = key;
+    collectNodes(doc, nodes).forEach(function (node) {
+        var key = styleToCanonicalString(node.style);
 
         if (!unique[key]) {
+            node.count     = node.count || 1;
+            node.styleText = key;
+
             unique[key] = node;
-            node.count  = node.count || 1;
         } else {
             unique[key].count++;
         }
-    }
+    });
 
     return FBL.values(unique);
 }
@@ -365,25 +395,23 @@ TypographyPanel.prototype = FBL.extend(Firebug.Panel, {
         }
 
         try {
-            var str = Components.classes['@mozilla.org/supports-string;1']
-                .createInstance(Components.interfaces.nsISupportsString);
+            var str = Cc['@mozilla.org/supports-string;1']
+                .createInstance(Ci.nsISupportsString);
             if (!str) { return false; }
             str.data = copytext;
 
-            var trans = Components.classes['@mozilla.org/widget/transferable;1']
-                  .createInstance(Components.interfaces.nsITransferable);
+            var trans = Cc['@mozilla.org/widget/transferable;1']
+                  .createInstance(Ci.nsITransferable);
             if (!trans) { return false; }
-
 
             trans.addDataFlavor('text/unicode');
             trans.setTransferData('text/unicode', str, copytext.length * 2);
 
-            var clipid = Components.interfaces.nsIClipboard;
-            var clip = Components.classes['@mozilla.org/widget/clipboard;1']
-                .getService(clipid);
+            var clipid = Ci.nsIClipboard;
+            var clip = Cc['@mozilla.org/widget/clipboard;1'].getService(clipid);
             if (!clip) { return false; }
 
-            clip.setData(trans,null,clipid.kGlobalClipboard);
+            clip.setData(trans, null, clipid.kGlobalClipboard);
             return true;
         }
         catch (e) {
@@ -442,7 +470,7 @@ TypographyPanel.prototype = FBL.extend(Firebug.Panel, {
             return;
         }
 
-        var json = this.buildJSON(this._nodes, collectProperties);
+        var json = this.buildJSON(this._nodes, PROPERTIES);
         this.setClipboardContents(json);
         this.notify('info', 'The report was copied to the clipboard as JSON.');
     },
@@ -513,7 +541,7 @@ TypographyPanel.prototype = FBL.extend(Firebug.Panel, {
 
         template.tag.append({
                 nodes: nodes,
-                properties: collectProperties
+                properties: PROPERTIES
             }, this.panelNode, template);
 
         this.showButton(COPY_BUTTON_ID, true);
