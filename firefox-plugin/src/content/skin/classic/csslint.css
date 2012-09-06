@@ -3,6 +3,10 @@
   width: 100%;
 }
 
+.typography-report tr:hover {
+  background: #e6e6e6;
+}
+
 .typography-report th {
   background: #eee;
   border:1px solid #ccc;
@@ -26,7 +30,6 @@
 
 .notify {
   background: #cfc;
-  /*border-bottom: 1px solid #999;*/
   box-shadow: 0 1px 5px #000;
   font-weight: bold;
   padding: 0.3em 1.2em;
