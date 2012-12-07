@@ -144,11 +144,11 @@ function collectNodes(doc, nodes) {
         node;
 
     while (node = treeWalker.nextNode()) {
-        // if (node.tagName.toLowerCase() === 'a') {
-        //     nodes = nodes.concat(collectLink(node));
-        // } else {
+        if (node.tagName.toLowerCase() === 'a') {
+            nodes = nodes.concat(collectLink(node));
+        } else {
             nodes.push(collectNode(node));
-        // }
+        }
     }
 
     return nodes;

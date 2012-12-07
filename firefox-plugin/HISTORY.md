@@ -1,6 +1,13 @@
 Typography History
 ==================
 
+0.2.0 (2012-12-06)
+------------------
+
+- Added: Highlight rows on hover
+- Added: Export URLs with JSON
+- Added: Report link states :active :focus :hover
+
 0.1.0 (2012-09-05)
 ------------------
 
