@@ -27,31 +27,31 @@ Getting Started
 
 ### Using the extension
 1. Now, visit the site you’d like to test 
-2. Right click and choose *Inspect element with Firebug*
-3. Now click on the *Typography* tab
-4. Click *Generate Report*
+2. Right click and choose **Inspect element with Firebug**
+3. Now click on the **Typography** tab
+4. Click **Generate Report**
 
 You'll see a list of different font properties and how many times they were used on the pages you've analyzed.
 
 ### Analyzing multiple pages
 
 1. Choose which pages to analyze (we’ve found that ten is a good number to get the big picture, but you can analyze as many as you’d like — it will even work on just one page!)
-2. Click *Persist*
-3. Now navigate to other pages, and on each subsequent page, click *Generate Report*
+2. Click **Persist**
+3. Now navigate to other pages, and on each subsequent page, click **Generate Report**
 
 You'll see the list of values and the count grow with each page. The table of results can be a bit difficult to interact with, so you can always click Copy to clipboard, and copy the results (JSON).
 
 Next Steps
 ----------
 
-1. Port it to chrome
+- [ ] Port it to chrome
 
 Contributors
 ------------
-* Nicole Sullivan
-* Arnaud Gueras
-* Anna Debenham
-* Fiona Chan
-* Laura Millan
-* Chris Klaiber
-* Brett Stimmerman
+* @stubbornella
+* @chrisklaiber 
+* @arnogues
+* @lauramillan
+* @mobywhale-chan
+* @maban
+* @brettstimmerman
