@@ -1,7 +1,7 @@
 Type-o-matic
 ============
 
-A browser (firebug, currently) extension that counts all the fonts on a page and orders them by color and size before happily outputting some json. It currently outputs the following type information:
+A browser (Firebug for Firefox, currently) extension that counts all the fonts on a page and orders them by color and size before happily outputting some json. It currently outputs the following type information:
 
 * count	
 * font-family	
@@ -20,13 +20,19 @@ A browser (firebug, currently) extension that counts all the fonts on a page and
 Getting Started
 ---------------
 
-### Installing the Extension
+### Installing the Extension in Firefox
 
-1. Install the [Firebug extension](http://getfirebug.com/) to Firefox
-2. Install the [Typo-o-matic extension](https://github.com/stubbornella/type-o-matic/releases/download/v0.2.1/type-o-matic-stubbornella.xpi) to Firebug
+Type-o-matic is an extension for Firebug. To install it, you'll need to install Firebug first.
 
+1. Add [Firebug](https://addons.mozilla.org/en-US/firefox/addon/firebug/) to Firefox
+2. Download the [Typo-o-matic Extension](https://github.com/stubbornella/type-o-matic/releases/download/v0.2.1/type-o-matic-stubbornella.xpi)
+3. Go to **Tools** > **Add-ons** in the menu bar
+4. Click on the cog icon and **Install Add-on from file**
+5. Navigate to the Type-o-matic extension folder you downloaded and select the file inside it ending in **.xpi**
 
-### Using the extension
+![A screenshot of the type-o-matic at work](img/install-firefox-extension.jpg)
+
+### Using the Extension
 1. Visit the site you’d like to test 
 2. Right click on anything in the page and choose **Inspect element with Firebug**
 3. Now click on the **Typography** tab
@@ -47,7 +53,7 @@ You'll see the list of values and the count grow with each page. The table of re
 Next Steps
 ----------
 
-- [ ] port extension to chrome 
+- [ ] port extension to Chrome 
 
 Contributors
 ------------
