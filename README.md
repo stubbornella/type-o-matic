@@ -34,6 +34,8 @@ Getting Started
 
 You'll see a list of different font properties and how many times they were used on the pages you've analyzed.
 
+![A screenshot of the type-o-matic at work](img/type-o-matic-amazon.jpg)
+
 ### Analyzing multiple pages
 
 1. Choose which pages to analyze (we’ve found that ten is a good number to get the big picture, but you can analyze as many as you’d like — it will even work on just one page!)
