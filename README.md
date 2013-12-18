@@ -1,5 +1,5 @@
-Typography-Browser-Extension
-============================
+Type-o-matic
+============
 
 A browser (firebug, currently) extension that counts all the fonts on a page and orders them by color and size before happily outputting some json. It currently outputs the following type information:
 
