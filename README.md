@@ -22,12 +22,13 @@ Getting Started
 
 ### Installing the Extension
 
-1. Download and install the Firebug extension to Firefox
-2. Download and install the Typo-o-matic extension to Firebug (I know, I fully intend to port it to Chrome)
+1. Install the [Firebug extension](http://getfirebug.com/) to Firefox
+2. Install the [Typo-o-matic extension](https://github.com/stubbornella/type-o-matic/releases/download/v0.2.1/type-o-matic-stubbornella.xpi) to Firebug
+
 
 ### Using the extension
-1. Now, visit the site you’d like to test 
-2. Right click and choose **Inspect element with Firebug**
+1. Visit the site you’d like to test 
+2. Right click on anything in the page and choose **Inspect element with Firebug**
 3. Now click on the **Typography** tab
 4. Click **Generate Report**
 
