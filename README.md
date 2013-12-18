@@ -45,7 +45,7 @@ You'll see the list of values and the count grow with each page. The table of re
 Next Steps
 ----------
 
-- [ ] Port it to chrome
+- [ ] port extension to chrome 
 
 Contributors
 ------------
