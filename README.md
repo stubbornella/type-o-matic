@@ -41,5 +41,8 @@ Contributors
 ------------
 * Nicole Sullivan
 * Arnaud Gueras
+* Anna Debenham
+* Fiona Chan
+* Laura Millan
 * Chris Klaiber
 * Brett Stimmerman
