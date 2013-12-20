@@ -57,10 +57,10 @@ Next Steps
 
 Contributors
 ------------
-* @stubbornella
-* @chrisklaiber 
-* @arnogues
-* @lauramillan
-* @mobywhale-chan
-* @maban
-* @brettstimmerman
+* [@stubbornella](http://github.com/stubbornella)
+* [@chrisklaiber](http://github.com/chrisklaiber)
+* [@arnogues](http://github.com/arnogues)
+* [@lauramillan](http://github.com/lauramillan)
+* [@mobywhale-chan](http://github.com/mobywhale-chan)
+* [@maban](http://github.com/maban)
+* [@brettstimmerman](http://github.com/brettstimmerman)
