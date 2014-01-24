@@ -50,10 +50,13 @@ You'll see a list of different font properties and how many times they were used
 
 You'll see the list of values and the count grow with each page. The table of results can be a bit difficult to interact with, so you can always click Copy to clipboard, and copy the results (JSON).
 
-Next Steps
+Roadmap
 ----------
 
-- [ ] port extension to Chrome 
+- Version 1.0.0 
+  - Initial release
+- Version 1.1.0
+  - Port extension to Chrome 
 
 Contributors
 ------------
